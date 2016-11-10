@@ -2,6 +2,7 @@ import React from 'react';
 import { withGoogleMap, GoogleMap, Polygon } from 'react-google-maps';
 import DrawingManager from 'react-google-maps/lib/drawing/DrawingManager';
 import style from './mapStyle.json';
+import * as markerIcon from '../../core/MarkerIcon';
 
 const polygonOptions = {
   clickable: true,
@@ -13,8 +14,19 @@ const polygonOptions = {
   zIndex: 1,
 };
 
-export const DrawingGoogleMap = withGoogleMap(({ polygon, onPolygonComplete }) => {
+const markerOptions = {
+  clickable: true,
+  draggable: true,
+  icon: markerIcon.getUrl('Click me to edit'),
+  optimized: false,
+  zIndex: 2,
+};
 
+export const DrawingGoogleMap = withGoogleMap(({
+  polygon,
+  onMarkerComplete,
+  onPolygonComplete,
+}) => {
   function onClick() {
     onPolygonComplete(this);
   }
@@ -38,13 +50,18 @@ export const DrawingGoogleMap = withGoogleMap(({ polygon, onPolygonComplete }) =
 
       <DrawingManager
         onPolygonComplete={onPolygonComplete}
+        onMarkerComplete={onMarkerComplete}
         defaultOptions={{
           drawingControl: true,
           drawingControlOptions: {
             position: google.maps.ControlPosition.LEFT_CENTER,
-            drawingModes: [google.maps.drawing.OverlayType.POLYGON]
+            drawingModes: [
+              google.maps.drawing.OverlayType.POLYGON,
+              google.maps.drawing.OverlayType.MARKER,
+            ]
           },
           polygonOptions,
+          markerOptions,
         }}
       />
     </GoogleMap>

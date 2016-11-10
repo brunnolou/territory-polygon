@@ -7,7 +7,7 @@ const inputStyle = {
 export class InputButton extends Component {
   static propTypes = {
     label: PropTypes.string,
-    onSubmit: PropTypes.function,
+    onSubmit: PropTypes.func,
     placeholder: PropTypes.string,
   }
 
