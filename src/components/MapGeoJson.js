@@ -1,70 +1,158 @@
-import React, { Component } from "react";
-// import ReactMapboxGl, { GeoJSONLayer, ScaleControl, ZoomControl } from "react-mapbox-gl";
-import geojson from "../config/geojson.json";
-import { accessToken } from "../config/config.json";
-import mapboxgl from 'mapbox-gl/dist/mapbox-gl.js';
-import 'mapbox-gl-draw/dist/mapbox-gl-draw';
+import React, { Component } from 'react';
+import Map from './Map';
+import Popup from './Popup';
 
-mapboxgl.accessToken = accessToken;
+const geoJSON = {
+  "type": "geojson",
+  "data": {
+    "type": "FeatureCollection",
+    "features": [{
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-77.03238901390978, 38.913188059745586]
+      },
+      "properties": {
+        "title": "Mapbox DC",
+        "icon": "monument"
+      }
+    }, {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-122.414, 37.776]
+      },
+      "properties": {
+        "title": "Mapbox SF",
+        "icon": "harbor"
+      }
+    }]
+  }
+};
 
-const containerStyle = {
-  height: '100vh',
-  width: '100%'
+const layerOptions = {
+  id: 'markers',
+  type: 'symbol',
+  source: 'points',
+  layout: {
+    'icon-image': '{icon}-15',
+    'text-field': '{title}',
+    'text-font': ['Open Sans Semibold', 'Arial Unicode MS Bold'],
+    'text-offset': [0, -0.6],
+    'text-anchor': 'bottom'
+  }
 };
 
 export default class MapGeoJson extends Component {
-  // state = {
-  //   popup: null,
-  //   center: [ -77.01239, 38.91275 ]
-  // };
-  //
-  // handleStyleLoad(map) {
-  //   const Draw = mapboxgl.Draw();
-  //
-  //   map.addControl(Draw);
-  // }
+  draw = null;
 
-  onLoad() {
-    const map = new mapboxgl.Map({
-      container: 'me',
-      style: 'mapbox://styles/mapbox/streets-v9'
-    });
+  state = {
+    preview: false,
+  }
 
-    console.info(mapboxgl.Draw);
+  constructor() {
+    super();
 
-    const Draw = mapboxgl.Draw();
-console.info(Draw);
-    map.addControl(Draw)
+    this.download = this.download.bind(this);
+    this.preview = this.preview.bind(this);
+    this.handleOnDrawCreate = this.handleOnDrawCreate.bind(this);
+    this.handleOnMapLoad = this.handleOnMapLoad.bind(this);
+  }
+
+  getGeoJSON() {
+    return {
+      ...geoJSON,
+      data: this.draw.getAll()
+    };
+  }
+
+  componentDidMount() {
+  }
+
+  preview() {
+    const geoJSON = this.getGeoJSON();
+
+    this.setState({ preview: !this.state.preview });
+
+    // Remove all before add.
+    if (!this.data) {
+      this.data = this.draw.getAll();
+    }
+
+    console.log(this.data);
+    this.draw.deleteAll();
+
+    if (this.map.getLayer('markers')) {
+      this.map.removeSource('points');
+      this.map.removeLayer('markers');
+    }
+
+    if (!this.state.preview) {
+      this.map.addSource('points', geoJSON);
+
+      this.map.addLayer(layerOptions);
+
+      return;
+    }
+
+    this.draw.add(this.data);
+  }
+
+  download() {
+    const data = 'data:application/octet-stream;charset=utf-8,' + encodeURIComponent(JSON.stringify(this.getGeoJSON(), null, '    '));
+
+    window.open(data);
+  }
+
+  handleOnDrawCreate() {
+    this.draw.getAll();
+  }
+
+  handleOnMapLoad(map, draw) {
+    draw.add(geoJSON.data);
+
+    this.draw = draw;
+    this.map = map;
+    this.map.on('draw.create', () => { console.log('cum que?'); })
   }
 
   render() {
+    const buttonStyle = {
+      position: 'absolute',
+      top: '2em',
+      right: '2em',
+      zIndex: '999',
+      padding: '1em',
+      backgroundColor: 'white'
+    };
+
     return (
-      <div
-        id="me"
-        ref={this.onLoad}
-        style={containerStyle}
+      <Map
+        onMapLoad={this.handleOnMapLoad}
+        onDrawCreate={this.handleOnDrawCreate}
+        drawOptions={{
+          displayControlsDefault: false,
+          controls: {
+            polygon: true,
+            point: true,
+            trash: true
+          }
+        }}
       >
-      </div>
-      // <ReactMapboxGl
-      //   style="mapbox://styles/mapbox/light-v8"
-      //   accessToken={accessToken}
-      //   center={this.state.center}
-      //   movingMethod="jumpTo"
-      //   containerStyle={containerStyle}>
-      //   onStyleLoad={this.handleStyleLoad}
-      //
-      //   <ScaleControl/>
-      //   <ZoomControl/>
-      //   <GeoJSONLayer
-      //     data={geojson}
-      //     symbolLayout={{
-      //       "text-field": "{place}",
-      //       "text-font": ["Open Sans Semibold", "Arial Unicode MS Bold"],
-      //       "text-offset": [0, 0.6],
-      //       "text-anchor": "top"
-      //     }}/>
-      //
-      // </ReactMapboxGl>
+        <a onClick={this.preview} style={{ ...buttonStyle, right: '10em' }}>Preview {this.state.preview ? '√' : 'x'}</a>
+        <a onClick={this.download} style={buttonStyle}>Dowload</a>
+
+        {
+          this.state.popup && (
+            <Popup coordinates={this.state.popup.coordinates} closeButton={true}>
+              <div>
+                <input type="text" />
+              </div>
+            </Popup>
+          )
+        }
+
+      </Map>
     );
   }
 }
