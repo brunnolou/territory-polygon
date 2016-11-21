@@ -2,7 +2,7 @@ import React, { Component, PropTypes } from 'react'
 import config from "../config/config.json";
 import mapboxgl from '../core/mapbox-gl-helper';
 // eslint-disable-next-line
-import 'mapbox-gl/plugins/src/mapbox-gl-draw/v0.12.0/mapbox-gl-draw.js';
+import MapboxglDraw from 'mapbox-gl-draw/dist/mapbox-gl-draw';
 
 mapboxgl.accessToken = config.accessToken;
 
@@ -41,12 +41,12 @@ class Map extends Component {
       zoom
     });
 
-    const draw = mapboxgl.Draw({
+    const draw = new MapboxglDraw({
       ...defaultDrawOptions,
       ...this.props.drawOptions
     });
 
-    const { onMapLoad, onDrawCreate } = this.props;
+    const { onMapLoad, onDrawCreate, onDrawUpdate, onMapDbClick } = this.props;
 
     map.addControl(draw);
     map.on('style.load', (...args) => {
