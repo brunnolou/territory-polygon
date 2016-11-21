@@ -1,6 +1,6 @@
-import React, { Component } from 'react';
 import Map from './Map';
-import Popup from './Popup';
+import React, { Component } from 'react';
+import * as mapStyles from '../config/mapStyles';
 
 const geoJSON = {
   "type": "geojson",
@@ -30,19 +30,6 @@ const geoJSON = {
   }
 };
 
-const layerOptions = {
-  id: 'markers',
-  type: 'symbol',
-  source: 'points',
-  layout: {
-    'icon-image': '{icon}-15',
-    'text-field': '{title}',
-    'text-font': ['Open Sans Semibold', 'Arial Unicode MS Bold'],
-    'text-offset': [0, -0.6],
-    'text-anchor': 'bottom'
-  }
-};
-
 export default class MapGeoJson extends Component {
   draw = null;
 
@@ -50,77 +37,111 @@ export default class MapGeoJson extends Component {
     preview: false,
   }
 
-  constructor() {
-    super();
+  markerSelected = false;
+
+  constructor(props) {
+    super(props);
 
     this.download = this.download.bind(this);
-    this.preview = this.preview.bind(this);
     this.handleOnDrawCreate = this.handleOnDrawCreate.bind(this);
+    this.handleOnDrawSelectionchange = this.handleOnDrawSelectionchange.bind(this);
+    this.handleOnDrawUpdate = this.handleOnDrawUpdate.bind(this);
+    this.handleOnMapDblClick = this.handleOnMapDblClick.bind(this);
     this.handleOnMapLoad = this.handleOnMapLoad.bind(this);
+    this.preview = this.preview.bind(this);
+
+    this.geoJSON = props.geoJSON || geoJSON;
   }
 
-  getGeoJSON() {
-    return {
-      ...geoJSON,
-      data: this.draw.getAll()
-    };
-  }
-
-  componentDidMount() {
+  setGeoJSONData(data) {
+    this.geoJSON = { ...geoJSON, data };
   }
 
   preview() {
-    const geoJSON = this.getGeoJSON();
-
     this.setState({ preview: !this.state.preview });
 
     // Remove all before add.
-    if (!this.data) {
-      this.data = this.draw.getAll();
-    }
-
-    console.log(this.data);
     this.draw.deleteAll();
 
+    // Remove style layer.
     if (this.map.getLayer('markers')) {
-      this.map.removeSource('points');
-      this.map.removeLayer('markers');
+      this.map.removeSource(mapStyles.marker.source);
+      this.map.removeLayer(mapStyles.marker.id);
+      this.map.removeLayer(mapStyles.polygon.id);
+      this.map.removeLayer(mapStyles.lineLayer.id);
     }
 
     if (!this.state.preview) {
-      this.map.addSource('points', geoJSON);
-
-      this.map.addLayer(layerOptions);
+      this.map.addSource('geoJSON', this.geoJSON);
+      this.map.addLayer(mapStyles.marker);
+      this.map.addLayer(mapStyles.polygon);
+      this.map.addLayer(mapStyles.lineLayer);
 
       return;
     }
 
-    this.draw.add(this.data);
+    this.draw.add(this.geoJSON.data);
   }
 
   download() {
-    const data = 'data:application/octet-stream;charset=utf-8,' + encodeURIComponent(JSON.stringify(this.getGeoJSON(), null, '    '));
+    const data = 'data:application/octet-stream;charset=utf-8,' + encodeURIComponent(JSON.stringify(this.geoJSON, null, '    '));
 
     window.open(data);
   }
 
-  handleOnDrawCreate() {
-    this.draw.getAll();
+  handleOnDrawCreate({ features: [feature] }) {
+    switch (feature.geometry.type) {
+      case 'Point':
+        this.updateMaker(feature);
+
+        break;
+      default:
+        console.info(feature);
+        this.setGeoJSONData(this.draw.getAll());
+    }
+  }
+
+  updateMaker(feature) {
+    if (feature.geometry.type !== 'Point') return;
+
+    const title = window.prompt('Edit me', feature.properties.title);
+
+    this.draw.setFeatureProperty(feature.id, 'title', title);
+    this.draw.setFeatureProperty(feature.id, 'icon', 'marker');
+
+    this.setGeoJSONData(this.draw.getAll());
+  }
+
+  handleOnDrawUpdate() {
+    this.setGeoJSONData(this.draw.getAll());
   }
 
   handleOnMapLoad(map, draw) {
-    draw.add(geoJSON.data);
+    draw.add(this.geoJSON.data);
 
     this.draw = draw;
     this.map = map;
-    this.map.on('draw.create', () => { console.log('cum que?'); })
+  }
+
+  handleOnDrawSelectionchange({ features: [feature] }) {
+    this.markerSelected = false;
+
+    if (!feature) return;
+
+    this.markerSelected = feature;
+  }
+
+  handleOnMapDblClick(...args) {
+    if (!this.markerSelected) return;
+
+    this.updateMaker(this.markerSelected);
   }
 
   render() {
     const buttonStyle = {
       position: 'absolute',
       top: '2em',
-      right: '2em',
+      left: '2em',
       zIndex: '999',
       padding: '1em',
       backgroundColor: 'white'
@@ -129,7 +150,10 @@ export default class MapGeoJson extends Component {
     return (
       <Map
         onMapLoad={this.handleOnMapLoad}
+        onMapDblClick={this.handleOnMapDblClick}
+        onDrawSelectionchange={this.handleOnDrawSelectionchange}
         onDrawCreate={this.handleOnDrawCreate}
+        onDrawUpdate={this.handleOnDrawUpdate}
         drawOptions={{
           displayControlsDefault: false,
           controls: {
@@ -139,19 +163,11 @@ export default class MapGeoJson extends Component {
           }
         }}
       >
-        <a onClick={this.preview} style={{ ...buttonStyle, right: '10em' }}>Preview {this.state.preview ? '√' : 'x'}</a>
+        <a onClick={this.preview} style={{ ...buttonStyle, left: '10em' }}>
+          {this.state.preview ? 'Previewing' : 'Editing'}
+        </a>
+
         <a onClick={this.download} style={buttonStyle}>Dowload</a>
-
-        {
-          this.state.popup && (
-            <Popup coordinates={this.state.popup.coordinates} closeButton={true}>
-              <div>
-                <input type="text" />
-              </div>
-            </Popup>
-          )
-        }
-
       </Map>
     );
   }
