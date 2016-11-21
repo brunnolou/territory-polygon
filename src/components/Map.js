@@ -46,7 +46,13 @@ class Map extends Component {
       ...this.props.drawOptions
     });
 
-    const { onMapLoad, onDrawCreate, onDrawUpdate, onMapDbClick } = this.props;
+    const {
+      onDrawCreate,
+      onDrawSelectionchange,
+      onDrawUpdate,
+      onMapDblClick,
+      onMapLoad,
+    } = this.props;
 
     map.addControl(draw);
     map.on('style.load', (...args) => {
@@ -57,7 +63,10 @@ class Map extends Component {
       this.setState({ map });
     });
 
-    map.on('draw.create', () => onDrawCreate(map, draw));
+    map.on('dblclick', (...args) => onMapDblClick(...args));
+    map.on('draw.create', (...args) => onDrawCreate(...args));
+    map.on('draw.selectionchange', (...args) => onDrawSelectionchange(...args));
+    map.on('draw.update', (...args) => onDrawUpdate(...args));
   }
 
   render () {
