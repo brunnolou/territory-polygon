@@ -1,11 +1,7 @@
 import React, { Component, PropTypes } from 'react'
 import config from "../config/config.json";
-import mapboxgl from '../core/mapbox-gl-helper';
-// eslint-disable-next-line
-import MapboxglDraw from 'mapbox-gl-draw/dist/mapbox-gl-draw';
+import mapboxgl, { MapboxglDraw } from '../core/mapbox-gl-helper';
 import styled from 'styled-components';
-
-mapboxgl.accessToken = config.accessToken;
 
 const defaultDrawOptions = {
   drawing: true,
@@ -44,7 +40,18 @@ class Map extends Component {
   });
 
   componentDidMount() {
-    const { style, center, zoom } = config;
+    const { accessToken, style, center, zoom } = config;
+    const {
+      drawOptions,
+      onDrawCreate,
+      onDrawSelectionchange,
+      onDrawUpdate,
+      onMapDblClick,
+      onMapLoad,
+    } = this.props;
+
+    mapboxgl.accessToken = accessToken;
+
     const map = new mapboxgl.Map({
       center,
       container: this.mapNode,
@@ -55,26 +62,17 @@ class Map extends Component {
 
     const draw = new MapboxglDraw({
       ...defaultDrawOptions,
-      ...this.props.drawOptions
+      ...drawOptions
     });
 
     map.addControl(draw);
     map.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
     map.addControl(new mapboxgl.GeolocateControl(), 'bottom-right');
 
-    const {
-      onDrawCreate,
-      onDrawSelectionchange,
-      onDrawUpdate,
-      onMapDblClick,
-      onMapLoad,
-    } = this.props;
-
-
     map.on('style.load', (...args) => {
-      if (onMapLoad) {
-        onMapLoad(map, draw, this.mapNode, ...args);
-      }
+      if (!onMapLoad) return;
+
+      onMapLoad(map, draw, this.mapNode, ...args);
 
       this.setState({ map });
     });
