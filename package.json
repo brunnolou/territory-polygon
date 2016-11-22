@@ -51,6 +51,7 @@
     "whatwg-fetch": "1.0.0"
   },
   "dependencies": {
+    "downloadjs": "^1.4.6",
     "mapbox-gl": "v0.28.0",
     "mapbox-gl-draw": "0.16.0",
     "react": "^15.3.2",
