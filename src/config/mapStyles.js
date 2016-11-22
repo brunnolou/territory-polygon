@@ -8,9 +8,15 @@ export const marker = {
   layout: {
     'icon-image': '{icon}-11',
     'text-field': '{title}',
+    'text-size': 18,
     'text-font': ['Open Sans Semibold', 'Arial Unicode MS Bold'],
     'text-offset': [0, -0.6],
     'text-anchor': 'bottom'
+  },
+  paint: {
+    'text-halo-width': 1,
+    'text-halo-color': '#fff',
+    'text-color': '#f00',
   },
   source: 'geoJSON',
   type: 'symbol',
@@ -19,7 +25,7 @@ export const marker = {
 export const polygon = {
   id: 'polygons',
   paint: {
-    'fill-opacity': .01,
+    'fill-opacity': 0,
     'fill-color': '#f00',
     'fill-outline-color': '#fff',
   },
