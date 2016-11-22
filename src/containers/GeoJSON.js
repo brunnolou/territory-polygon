@@ -8,11 +8,6 @@ const style = {
 };
 
 class GeoJSON extends Component {
-  componentWillUpdate(geoJSON) {
-    console.log(geoJSON);
-  }
-
-
   render () {
     return (
       <Dropzone

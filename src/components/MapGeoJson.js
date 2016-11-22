@@ -47,6 +47,7 @@ export default class MapGeoJson extends Component {
     this.setState({ preview: !this.state.preview });
 
     // Remove all before add.
+    this.draw.changeMode('simple_select', { featureIds: [] });
     this.draw.deleteAll();
 
     // Remove style layer.
@@ -164,15 +165,6 @@ export default class MapGeoJson extends Component {
   }
 
   render() {
-    const buttonStyle = {
-      position: 'absolute',
-      top: '2em',
-      left: '2em',
-      zIndex: '999',
-      padding: '1em',
-      backgroundColor: 'white'
-    };
-
     const style = {
       height: '100vh',
       width: '100%'

@@ -84,8 +84,6 @@ class Map extends Component {
   }
 
   componentDidUpdate() {
-    console.log('resize');
-
     window.dispatchEvent(new Event('resize'));
   }
 
