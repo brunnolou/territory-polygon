@@ -3,6 +3,7 @@ import Dropzone from 'react-dropzone';
 import Map from './Map';
 import React, { Component } from 'react';
 import * as mapStyles from '../config/mapStyles';
+import downloadjs from 'downloadjs';
 
 export default class MapGeoJson extends Component {
   draw = null;
@@ -69,17 +70,19 @@ export default class MapGeoJson extends Component {
   }
 
   download() {
-    this.geoJSON.bbox = [].concat(...this.map.getBounds().toArray());;
+    this.geoJSON.bbox = [].concat(...this.map.getBounds().toArray());
 
-    const data = 'data:application/octet-stream;charset=utf-8,' + encodeURIComponent(JSON.stringify(this.geoJSON, null, '    '));
-
-    window.open(data);
+    downloadjs(
+      JSON.stringify(this.geoJSON, null, '    '),
+      'map.geojson',
+      'application/vnd.geo+json'
+    );
   }
 
   downloadImage() {
     const data = this.map.getCanvas().toDataURL();
 
-    window.open(data);
+    downloadjs(data, 'map.png');
   }
 
   handleOnDrawCreate({ features: [feature] }) {
@@ -179,6 +182,7 @@ export default class MapGeoJson extends Component {
 
     return (
       <Dropzone
+        multiple={false}
         disableClick
         onDrop={this.handleOnDrop}
         style={style}
