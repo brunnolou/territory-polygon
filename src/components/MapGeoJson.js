@@ -1,3 +1,4 @@
+import { ControlGroup, ControlPosition, ControlButton } from './CustomControl/';
 import Dropzone from 'react-dropzone';
 import Map from './Map';
 import React, { Component } from 'react';
@@ -7,6 +8,7 @@ export default class MapGeoJson extends Component {
   draw = null;
 
   state = {
+    geoJSON: {},
     preview: false,
   }
 
@@ -22,17 +24,25 @@ export default class MapGeoJson extends Component {
     this.handleOnDrawCreate = this.handleOnDrawCreate.bind(this);
     this.handleOnDrawSelectionchange = this.handleOnDrawSelectionchange.bind(this);
     this.handleOnDrawUpdate = this.handleOnDrawUpdate.bind(this);
+    this.handleOnDrop = this.handleOnDrop.bind(this);
     this.handleOnMapDblClick = this.handleOnMapDblClick.bind(this);
     this.handleOnMapLoad = this.handleOnMapLoad.bind(this);
-    this.handleOnDrop = this.handleOnDrop.bind(this);
     this.preview = this.preview.bind(this);
+  }
+
+  fitGeoJSONBounds() {
+    if (!this.geoJSON.bbox) return;
+
+    this.map.fitBounds(this.geoJSON.bbox, { padding: 20 });
   }
 
   setGeoJSONData(data) {
     this.geoJSON = { ...this.props.geoJSON, ...data };
+
+    this.setState({ geoJSON: this.geoJSON });
   }
 
-  preview() {
+  preview(preview = this.state.preview) {
     this.setState({ preview: !this.state.preview });
 
     // Remove all before add.
@@ -127,16 +137,14 @@ export default class MapGeoJson extends Component {
 
     const fileReader = new FileReader();
 
-    fileReader.onload = event => {
-      const geoJSON = JSON.parse(event.target.result);
+    fileReader.onload = ({ target }) => {
+      const geoJSON = JSON.parse(target.result);
 
       this.setGeoJSONData(geoJSON);
 
       this.draw.add(this.geoJSON);
 
-      if (geoJSON.bbox) {
-        this.map.fitBounds(geoJSON.bbox, { padding: 20 });
-      }
+      this.fitGeoJSONBounds();
     }
 
     const xhr = new XMLHttpRequest();
@@ -177,11 +185,11 @@ export default class MapGeoJson extends Component {
       >
         <Map
           className={preview ? 'previewing' : ''}
-          onMapLoad={this.handleOnMapLoad}
-          onMapDblClick={this.handleOnMapDblClick}
-          onDrawSelectionchange={this.handleOnDrawSelectionchange}
           onDrawCreate={this.handleOnDrawCreate}
+          onDrawSelectionchange={this.handleOnDrawSelectionchange}
           onDrawUpdate={this.handleOnDrawUpdate}
+          onMapDblClick={this.handleOnMapDblClick}
+          onMapLoad={this.handleOnMapLoad}
           drawOptions={{
             displayControlsDefault: false,
             controls: {
@@ -192,14 +200,29 @@ export default class MapGeoJson extends Component {
           }}
           print={preview}
         >
-          <div className="no-print">
-            <a onClick={this.preview} style={{ ...buttonStyle, left: '20em' }}>
-              {preview ? 'Previewing' : 'Editing'}
-            </a>
+          <ControlPosition>
+            <ControlGroup>
+              {this.geoJSON.bbox &&
+                <ControlButton className="geolocate" onClick={() => this.fitGeoJSONBounds()} />
+              }
+              <ControlButton onClick={() => this.preview()} style={{ background: preview ? 'rgba(255, 0, 0, 0.2)' : 'rgba(0, 0, 255, 0.21)' }}>
+                <small>
+                  {this.state.preview ? 'View': 'Edit' } <br />
+                  Mode
+                </small>
+              </ControlButton>
+            </ControlGroup>
 
-            <a onClick={this.download} style={buttonStyle}>geoJSON</a>
-            <a onClick={this.downloadImage} style={{ ...buttonStyle, left: '10em' }}>Image</a>
-          </div>
+            <ControlGroup>
+              <ControlButton onClick={() => this.download()}>
+                <small>geo<br />JSON</small>
+              </ControlButton>
+
+              <ControlButton onClick={() => this.downloadImage()}>
+                <small>Image</small>
+              </ControlButton>
+            </ControlGroup>
+          </ControlPosition>
         </Map>
       </Dropzone>
     );

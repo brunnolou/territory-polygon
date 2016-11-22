@@ -18,7 +18,7 @@
   font-size: large;
 }
 
-.previewing .mapboxgl-control-container {
+.previewing .mapbox-gl-draw_ctrl-draw-btn {
     display: none;
 }
 
