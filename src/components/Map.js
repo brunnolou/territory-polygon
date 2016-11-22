@@ -46,6 +46,7 @@ class Map extends Component {
       onDrawCreate,
       onDrawSelectionchange,
       onDrawUpdate,
+      onDrawDelete,
       onMapDblClick,
       onMapLoad,
     } = this.props;
@@ -81,6 +82,7 @@ class Map extends Component {
     map.on('draw.create', (...args) => onDrawCreate(...args));
     map.on('draw.selectionchange', (...args) => onDrawSelectionchange(...args));
     map.on('draw.update', (...args) => onDrawUpdate(...args));
+    map.on('draw.delete', (...args) => onDrawDelete(...args));
   }
 
   componentDidUpdate() {

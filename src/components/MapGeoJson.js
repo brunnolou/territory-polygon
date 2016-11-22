@@ -183,6 +183,7 @@ export default class MapGeoJson extends Component {
           onDrawCreate={this.handleOnDrawCreate}
           onDrawSelectionchange={this.handleOnDrawSelectionchange}
           onDrawUpdate={this.handleOnDrawUpdate}
+          onDrawDelete={this.handleOnDrawUpdate}
           onMapDblClick={this.handleOnMapDblClick}
           onMapLoad={this.handleOnMapLoad}
           drawOptions={{
