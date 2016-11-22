@@ -3,13 +3,9 @@ import config from "../config/config.json";
 import mapboxgl from '../core/mapbox-gl-helper';
 // eslint-disable-next-line
 import MapboxglDraw from 'mapbox-gl-draw/dist/mapbox-gl-draw';
+import styled from 'styled-components';
 
 mapboxgl.accessToken = config.accessToken;
-
-const style = {
-  height: '100vh',
-  width: '100%'
-};
 
 const defaultDrawOptions = {
   drawing: true,
@@ -20,6 +16,21 @@ const defaultDrawOptions = {
     trash: true
   }
 }
+
+const Div = styled.div`
+  position: absolute;
+  overflow: hidden;
+`;
+
+const printStyle = {
+  width: 1280,
+  height: 591,
+}
+
+const style = {
+  height: '100%',
+  width: '100%'
+};
 
 class Map extends Component {
   static childContextTypes = {
@@ -35,9 +46,10 @@ class Map extends Component {
   componentDidMount() {
     const { style, center, zoom } = config;
     const map = new mapboxgl.Map({
-      container: this.mapNode,
-      style,
       center,
+      container: this.mapNode,
+      preserveDrawingBuffer: true,
+      style,
       zoom
     });
 
@@ -45,6 +57,10 @@ class Map extends Component {
       ...defaultDrawOptions,
       ...this.props.drawOptions
     });
+
+    map.addControl(draw);
+    map.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
+    map.addControl(new mapboxgl.GeolocateControl(), 'bottom-right');
 
     const {
       onDrawCreate,
@@ -54,10 +70,10 @@ class Map extends Component {
       onMapLoad,
     } = this.props;
 
-    map.addControl(draw);
+
     map.on('style.load', (...args) => {
       if (onMapLoad) {
-        onMapLoad(map, draw, ...args);
+        onMapLoad(map, draw, this.mapNode, ...args);
       }
 
       this.setState({ map });
@@ -69,15 +85,27 @@ class Map extends Component {
     map.on('draw.update', (...args) => onDrawUpdate(...args));
   }
 
+  componentDidUpdate() {
+    console.log('resize');
+
+    window.dispatchEvent(new Event('resize'));
+  }
+
   render () {
-    const { children } = this.props;
+    const { className, print, children } = this.props;
 
     return (
       <div
-        ref={(map) => this.mapNode = map}
-        style={style}
+        style={print ? printStyle : style}
+        className={className}
       >
-        {children}
+        <Div
+          innerRef={(map) => this.mapNode = map}
+          print={print}
+          style={print ? printStyle : style}
+        >
+          {children}
+        </Div>
       </div>
     )
   }

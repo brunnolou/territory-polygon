@@ -18,6 +18,30 @@
   font-size: large;
 }
 
-@media print {
+.previewing .mapboxgl-control-container {
+    display: none;
+}
 
+.previewing .no-print {
+    position: relative;
+    opacity: .5;
+    z-index: 9;
+}
+
+@media print {
+    .mapboxgl-control-container {
+        display: none;
+    }
+
+    .no-print {
+        display: none;
+    }
+
+    * {
+        outline: 0;
+    }
+}
+
+@page {
+    margin: 0;
 }
