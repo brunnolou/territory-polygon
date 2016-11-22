@@ -61,8 +61,8 @@ export default class MapGeoJson extends Component {
 
     if (!this.state.preview) {
       this.map.addSource('geoJSON', { 'type': 'geojson', 'data': this.geoJSON });
-      this.map.addLayer(mapStyles.polygon);
-      this.map.addLayer(mapStyles.lineLayer);
+      this.map.addLayer(mapStyles.polygon, 'poi_label_4');
+      this.map.addLayer(mapStyles.lineLayer, 'poi_label_4');
       this.map.addLayer(mapStyles.marker);
 
       return;
