@@ -8,7 +8,7 @@ export const marker = {
   layout: {
     'icon-image': '{icon}-11',
     'text-field': '{title}',
-    'text-size': 18,
+    'text-size': 20,
     'text-font': ['Open Sans Semibold', 'Arial Unicode MS Bold'],
     'text-offset': [0, -0.6],
     'text-anchor': 'bottom'
