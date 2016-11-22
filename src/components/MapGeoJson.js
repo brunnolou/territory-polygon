@@ -4,6 +4,7 @@ import Map from './Map';
 import React, { Component } from 'react';
 import * as mapStyles from '../config/mapStyles';
 import downloadjs from 'downloadjs';
+import saveAs from '../core/saveAs';
 
 export default class MapGeoJson extends Component {
   draw = null;
@@ -73,11 +74,9 @@ export default class MapGeoJson extends Component {
   download() {
     this.geoJSON.bbox = [].concat(...this.map.getBounds().toArray());
 
-    downloadjs(
-      JSON.stringify(this.geoJSON, null, '    '),
-      'map.geojson',
-      'application/vnd.geo+json'
-    );
+    const data = encodeURIComponent(JSON.stringify(this.geoJSON, null, '    '));
+
+    saveAs(data, 'map.geojson');
   }
 
   downloadImage() {
