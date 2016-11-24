@@ -1,13 +1,15 @@
-import MapGeoJson from './components/MapGeoJson';
-import React, { Component } from 'react';
 import './App.css';
+import MapGeoJson from './containers/MapGeoJson';
+import React, { Component } from 'react';
 
-class App extends Component {
+/**
+ * Export `App` Component.
+ */
+
+export default class App extends Component {
   render() {
     return (
       <MapGeoJson />
     );
   }
 }
-
-export default App;

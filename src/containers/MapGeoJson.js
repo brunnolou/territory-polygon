@@ -1,10 +1,14 @@
-import { ControlGroup, ControlPosition, ControlButton } from './CustomControl/';
-import Dropzone from 'react-dropzone';
-import Map from './Map';
-import React, { Component } from 'react';
 import * as mapStyles from '../config/mapStyles';
+import { ControlButton, ControlGroup, ControlPosition } from '../components/CustomControl/';
+import { readBlobUrl, saveAs } from '../utils/';
+import Dropzone from 'react-dropzone';
+import Map from '../components/Map';
+import React, { Component } from 'react';
 import downloadjs from 'downloadjs';
-import saveAs from '../core/saveAs';
+
+/**
+ * Export `MapGeoJson` Component.
+ */
 
 export default class MapGeoJson extends Component {
   draw = null;
@@ -14,9 +18,16 @@ export default class MapGeoJson extends Component {
     preview: false,
   }
 
-  geoJSON = { 'type': 'FeatureCollection', 'features': [] };
+  geoJSON = {
+    features: [],
+    type: 'FeatureCollection',
+  };
 
   markerSelected = false;
+
+  /**
+   * Constructor.
+   */
 
   constructor() {
     super();
@@ -32,17 +43,29 @@ export default class MapGeoJson extends Component {
     this.preview = this.preview.bind(this);
   }
 
+  /**
+   * Fit geo jSONBounds.
+   */
+
   fitGeoJSONBounds() {
     if (!this.geoJSON.bbox) return;
 
     this.map.fitBounds(this.geoJSON.bbox, { padding: 20 });
   }
 
+  /**
+   * Set geo jSONData.
+   */
+
   setGeoJSONData(data) {
     this.geoJSON = { ...this.props.geoJSON, ...data };
 
     this.setState({ geoJSON: this.geoJSON });
   }
+
+  /**
+   * Preview.
+   */
 
   preview(preview = this.state.preview) {
     this.setState({ preview: !this.state.preview });
@@ -60,7 +83,7 @@ export default class MapGeoJson extends Component {
     }
 
     if (!this.state.preview) {
-      this.map.addSource('geoJSON', { 'type': 'geojson', 'data': this.geoJSON });
+      this.map.addSource('geoJSON', { data: this.geoJSON, type: 'geojson' });
       this.map.addLayer(mapStyles.polygon, 'poi_label_4');
       this.map.addLayer(mapStyles.lineLayer, 'poi_label_4');
       this.map.addLayer(mapStyles.marker);
@@ -71,6 +94,10 @@ export default class MapGeoJson extends Component {
     this.draw.add(this.geoJSON);
   }
 
+  /**
+   * Download.
+   */
+
   download() {
     this.geoJSON.bbox = [].concat(...this.map.getBounds().toArray());
 
@@ -79,11 +106,19 @@ export default class MapGeoJson extends Component {
     saveAs(data, 'map.geojson');
   }
 
+  /**
+   * Download image.
+   */
+
   downloadImage() {
     const data = this.map.getCanvas().toDataURL();
 
     downloadjs(data, 'map.png');
   }
+
+  /**
+   * Handle on draw create.
+   */
 
   handleOnDrawCreate({ features: [feature] }) {
     switch (feature.geometry.type) {
@@ -96,9 +131,14 @@ export default class MapGeoJson extends Component {
     }
   }
 
+  /**
+   * Update maker.
+   */
+
   updateMaker(feature) {
     if (feature.geometry.type !== 'Point') return;
 
+    // eslint-disable-next-line
     const title = window.prompt('Edit me', feature.properties.title);
 
     this.draw.setFeatureProperty(feature.id, 'title', title);
@@ -107,9 +147,17 @@ export default class MapGeoJson extends Component {
     this.setGeoJSONData(this.draw.getAll());
   }
 
+  /**
+   * Handle on draw update.
+   */
+
   handleOnDrawUpdate() {
     this.setGeoJSONData(this.draw.getAll());
   }
+
+  /**
+   * Handle on map load.
+   */
 
   handleOnMapLoad(map, draw, mapNode) {
     draw.add(this.geoJSON);
@@ -119,6 +167,10 @@ export default class MapGeoJson extends Component {
     this.mapNode = mapNode;
   }
 
+  /**
+   * Handle on draw selectionchange.
+   */
+
   handleOnDrawSelectionchange({ features: [feature] }) {
     this.markerSelected = false;
 
@@ -127,46 +179,42 @@ export default class MapGeoJson extends Component {
     this.markerSelected = feature;
   }
 
+  /**
+   * Handle on map dbl click.
+   */
+
   handleOnMapDblClick(...args) {
     if (!this.markerSelected) return;
 
     this.updateMaker(this.markerSelected);
   }
 
+  /**
+   * Handle on drop.
+   */
+
   handleOnDrop(acceptedFiles, rejectedFiles) {
     if (!acceptedFiles.length) return;
 
     const [{ preview }] = acceptedFiles;
 
-    const fileReader = new FileReader();
-
-    fileReader.onload = ({ target }) => {
-      const geoJSON = JSON.parse(target.result);
-
+    readBlobUrl(preview, geoJSON => {
       this.setGeoJSONData(geoJSON);
 
       this.draw.add(this.geoJSON);
 
       this.fitGeoJSONBounds();
-    }
-
-    const xhr = new XMLHttpRequest();
-
-    xhr.open('GET', preview, true);
-    xhr.responseType = 'blob';
-    xhr.onload = function() {
-      if (this.status !== 200) return;
-
-      fileReader.readAsText(this.response);
-    };
-
-    xhr.send();
+    });
   }
+
+  /**
+   * Render.
+   */
 
   render() {
     const style = {
       height: '100vh',
-      width: '100%'
+      width: '100%',
     };
 
     const { preview } = this.state;
@@ -186,25 +234,15 @@ export default class MapGeoJson extends Component {
           onDrawDelete={this.handleOnDrawUpdate}
           onMapDblClick={this.handleOnMapDblClick}
           onMapLoad={this.handleOnMapLoad}
-          drawOptions={{
-            displayControlsDefault: false,
-            controls: {
-              polygon: true,
-              point: true,
-              trash: true
-            }
-          }}
           print={preview}
         >
           <ControlPosition>
             <ControlGroup>
-              {this.geoJSON.bbox &&
-                <ControlButton className="geolocate" onClick={() => this.fitGeoJSONBounds()} />
-              }
+              {this.geoJSON.bbox && <ControlButton className="geolocate" onClick={() => this.fitGeoJSONBounds()} />}
+
               <ControlButton onClick={() => this.preview()} style={{ background: preview ? 'rgba(255, 0, 0, 0.2)' : 'rgba(0, 0, 255, 0.21)' }}>
                 <small>
-                  {this.state.preview ? 'View': 'Edit' } <br />
-                  Mode
+                  {this.state.preview ? 'View' : 'Edit' } <br /> Mode
                 </small>
               </ControlButton>
             </ControlGroup>

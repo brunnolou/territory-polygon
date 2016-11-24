@@ -1,17 +1,17 @@
-import React, { Component, PropTypes } from 'react'
-import config from "../config/config.json";
+import React, { Component } from 'react';
+import config from '../config/config.json';
 import mapboxgl, { MapboxglDraw } from '../core/mapbox-gl-helper';
 import styled from 'styled-components';
 
 const defaultDrawOptions = {
-  drawing: true,
-  displayControlsDefault: false,
   controls: {
-    polygon: true,
     point: true,
-    trash: true
-  }
-}
+    polygon: true,
+    trash: true,
+  },
+  displayControlsDefault: false,
+  drawing: true,
+};
 
 const Div = styled.div`
   position: absolute;
@@ -19,25 +19,24 @@ const Div = styled.div`
 `;
 
 const printStyle = {
-  width: 1280,
   height: 591,
-}
+  width: 1280,
+};
 
 const style = {
   height: '100%',
-  width: '100%'
+  width: '100%',
 };
 
-class Map extends Component {
-  static childContextTypes = {
-    map: PropTypes.object,
-  };
+/**
+ * Export `Map` Component.
+ */
 
-  state = {};
+export default class Map extends Component {
 
-  getChildContext = () => ({
-    map: this.state.map,
-  });
+  /**
+   * Component did mount.
+   */
 
   componentDidMount() {
     const { accessToken, style, center, zoom } = config;
@@ -58,12 +57,12 @@ class Map extends Component {
       container: this.mapNode,
       preserveDrawingBuffer: true,
       style,
-      zoom
+      zoom,
     });
 
     const draw = new MapboxglDraw({
       ...defaultDrawOptions,
-      ...drawOptions
+      ...drawOptions,
     });
 
     map.addControl(draw);
@@ -80,16 +79,24 @@ class Map extends Component {
 
     map.on('dblclick', (...args) => onMapDblClick(...args));
     map.on('draw.create', (...args) => onDrawCreate(...args));
+    map.on('draw.delete', (...args) => onDrawDelete(...args));
     map.on('draw.selectionchange', (...args) => onDrawSelectionchange(...args));
     map.on('draw.update', (...args) => onDrawUpdate(...args));
-    map.on('draw.delete', (...args) => onDrawDelete(...args));
   }
+
+  /**
+   * Component did update.
+   */
 
   componentDidUpdate() {
     window.dispatchEvent(new Event('resize'));
   }
 
-  render () {
+  /**
+   * Render.
+   */
+
+  render() {
     const { className, print, children } = this.props;
 
     return (
@@ -98,15 +105,13 @@ class Map extends Component {
         className={className}
       >
         <Div
-          innerRef={(map) => this.mapNode = map}
+          innerRef={map => { this.mapNode = map; }}
           print={print}
           style={print ? printStyle : style}
         >
           {children}
         </Div>
       </div>
-    )
+    );
   }
 }
-
-export default Map;

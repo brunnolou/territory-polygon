@@ -1,0 +1,10 @@
+rules:
+  comma-dangle:
+    - error
+    - always-multiline
+  curly:
+    - error
+    - multi-line
+extends:
+  - seegno
+  - react-app
