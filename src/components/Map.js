@@ -1,3 +1,4 @@
+import { connect } from 'react-redux';
 import React, { Component } from 'react';
 import config from '../config/config.json';
 import mapboxgl, { MapboxglDraw } from '../core/mapbox-gl-helper';
@@ -32,22 +33,37 @@ const style = {
  * Export `Map` Component.
  */
 
-export default class Map extends Component {
+export class Map extends Component {
+
+  /**
+   * Should component update.
+   */
+
+  shouldComponentUpdate(nextProps, nextState) {
+    if (this.props.className !== nextProps.className) {
+      return true;
+    }
+
+    return false;
+  }
 
   /**
    * Component did mount.
    */
 
   componentDidMount() {
-    const { accessToken, style, center, zoom } = config;
+    const { accessToken, style } = config;
     const {
+      center,
       drawOptions,
       onDrawCreate,
+      onDrawDelete,
       onDrawSelectionchange,
       onDrawUpdate,
-      onDrawDelete,
       onMapDblClick,
       onMapLoad,
+      onMapMoveEnd,
+      zoom,
     } = this.props;
 
     mapboxgl.accessToken = accessToken;
@@ -78,6 +94,7 @@ export default class Map extends Component {
     });
 
     map.on('dblclick', (...args) => onMapDblClick(...args));
+    map.on('moveend', (...args) => onMapMoveEnd(...args));
     map.on('draw.create', (...args) => onDrawCreate(...args));
     map.on('draw.delete', (...args) => onDrawDelete(...args));
     map.on('draw.selectionchange', (...args) => onDrawSelectionchange(...args));
@@ -115,3 +132,12 @@ export default class Map extends Component {
     );
   }
 }
+
+function mapStateToProps(state) {
+  return {
+    center: state.location.LngLat,
+    zoom: state.location.zoom,
+  };
+}
+
+export default connect(mapStateToProps, null)(Map);
