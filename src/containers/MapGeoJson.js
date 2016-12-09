@@ -1,6 +1,9 @@
 import * as mapStyles from '../config/mapStyles';
 import { ControlButton, ControlGroup, ControlPosition } from '../components/CustomControl/';
+import { bindActionCreators } from 'redux';
+import { connect } from 'react-redux';
 import { readBlobUrl, saveAs } from '../utils/';
+import { setMapLocation } from '../actions';
 import Dropzone from 'react-dropzone';
 import Map from '../components/Map';
 import React, { Component } from 'react';
@@ -10,7 +13,7 @@ import downloadjs from 'downloadjs';
  * Export `MapGeoJson` Component.
  */
 
-export default class MapGeoJson extends Component {
+export class MapGeoJson extends Component {
   draw = null;
 
   state = {
@@ -40,6 +43,7 @@ export default class MapGeoJson extends Component {
     this.handleOnDrop = this.handleOnDrop.bind(this);
     this.handleOnMapDblClick = this.handleOnMapDblClick.bind(this);
     this.handleOnMapLoad = this.handleOnMapLoad.bind(this);
+    this.handleOnMapMoveEnd = this.handleOnMapMoveEnd.bind(this);
     this.preview = this.preview.bind(this);
   }
 
@@ -207,6 +211,15 @@ export default class MapGeoJson extends Component {
     });
   }
 
+  handleOnMapMoveEnd() {
+    const { setMapLocation } = this.props;
+
+    setMapLocation(
+      this.map.getCenter().toArray(),
+      this.map.getZoom()
+    );
+  }
+
   /**
    * Render.
    */
@@ -229,11 +242,12 @@ export default class MapGeoJson extends Component {
         <Map
           className={preview ? 'previewing' : ''}
           onDrawCreate={this.handleOnDrawCreate}
+          onDrawDelete={this.handleOnDrawUpdate}
           onDrawSelectionchange={this.handleOnDrawSelectionchange}
           onDrawUpdate={this.handleOnDrawUpdate}
-          onDrawDelete={this.handleOnDrawUpdate}
           onMapDblClick={this.handleOnMapDblClick}
           onMapLoad={this.handleOnMapLoad}
+          onMapMoveEnd={this.handleOnMapMoveEnd}
           print={preview}
         >
           <ControlPosition>
@@ -262,3 +276,9 @@ export default class MapGeoJson extends Component {
     );
   }
 }
+
+function mapDispatchToProps(dispatch) {
+  return bindActionCreators({ setMapLocation }, dispatch);
+}
+
+export default connect(null, mapDispatchToProps)(MapGeoJson);
